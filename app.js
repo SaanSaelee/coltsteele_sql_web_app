@@ -1,8 +1,46 @@
 var express = require("express");
+var mysql = require("mysql");
+var bodyParser = require("body-parser");
 var app = express();
 
+app.set("view engine", "ejs");
+app.use(bodyParser.urlencoded({ extended: true }));
+
+var connection = mysql.createConnection({
+  host: "localhost",
+  user: "saansaelee",
+  database: "join_us",
+});
+
 app.get("/", function (req, res) {
-  res.send("You've Reached The Home Page!");
+  // Find count of users in DB
+  var q = "SELECT COUNT(*) FROM users";
+  connection.query(q, function (err, results) {
+    if (err) throw err;
+    var count = results[0].count;
+    res.send("We have " + count + " users in our db");
+    res.render("home", { data: count });
+  });
+});
+
+app.post("/register", function (req, res) {
+  var person = { email: req.body.email };
+  connection.query("INSERT INTO users SET ?", person, function (err, result) {
+    console.log(err);
+    console.log(result);
+    res.redirect("/");
+  });
+});
+
+app.get("/joke", function (req, res) {
+  var joke =
+    "What do you call a dog that does magic tricks? A labracadabrador.";
+  res.send(joke);
+});
+
+app.get("/random_num", function (req, res) {
+  var num = Math.floor(Math.random() * 10) + 1;
+  res.send("Your lucky number is " + num);
 });
 
 app.listen(3000, function () {
